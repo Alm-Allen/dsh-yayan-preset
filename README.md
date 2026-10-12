@@ -1,16 +1,20 @@
 # dsh-yayan-preset
 
-给 **DeepSeek Harness（dsh）** 加一个中文原生的 agent 预设：**雅言模式（yayan）**。
+把 **DeepSeek Harness（dsh）** 的原生 **标准模式（standard）** 汉化：装上本包之后，标准模式
+本身就说中文——系统提示词与全部工具描述汉化，模型以中文思维链工作，工具仍按 standard 的方式
+**直接调用**（没有 `run_code` 这层中介，每个工具都是独立 schema）。
 
-雅言模式是标准模式（standard）的完整中文化版本：系统提示词与全部工具描述汉化，模型以中文思维链
-工作，工具仍按 standard 的方式**直接调用**——没有 `run_code` 这层中介，每个工具都是独立 schema。
+本包**不新增预设条目**，而是按 Loader 行 id **覆盖**随 dsh 出货的 `preset-standard`：预设列表里
+仍然只有原生的「标准模式」，名字、位置、`config.id` 全部照旧，被换掉的只是它加载的插件列表
+（多一个中文化层 `yayan-zh`）。停用或卸载本包即恢复原版。
 
-和仓颉模式（[dsh-cangjie-preset](https://github.com/Alm-Allen/dsh-cangjie-preset)）是同一套机制、同一张翻译表，差别只在
-挂在哪个呈现方式上：仓颉挂 `ptc`，雅言挂 `standard`。
+和仓颉模式（[dsh-cangjie-preset](https://github.com/Alm-Allen/dsh-cangjie-preset)）是同一套汉化机制、同一张翻译表。
+差别在挂载方式：仓颉目前仍是**新增**一个 `ptc` 的中文化预设（`preset-cangjie`），雅言已经改成
+**覆盖**原生 `standard`。
 
 本仓库是一个 **dsh 插件（bundle）**，不是安装脚本：`package.json` 里的 `dsh.bundle.patch`
-指向包内的 `cordis.patch.yml`，后者 `insert` 一条 `@deepseek-ai/dsh-agent-preset` 声明。
-安装、更新、卸载都交给 dsh 自己的插件管理。
+指向包内的 `cordis.patch.yml`，后者覆盖 `preset-standard` 那一行。安装、更新、卸载都交给
+dsh 自己的插件管理。
 
 ## 安装
 
@@ -29,7 +33,8 @@ dsh plugin --profile web add github:Alm-Allen/dsh-yayan-preset
 dsh plugin --profile web add github:Alm-Allen/dsh-yayan-preset#<commit-sha>
 ```
 
-装完重启 dsh、刷新页面，到 **设置 → Agent 预设** 里就能看到「雅言模式（yayan）」。
+装完重启 dsh、刷新页面即可——**不需要再选预设**：`standard` 本来就是默认预设，被覆盖之后它
+自己就是中文的。到 **设置 → Agent 预设** 里看到的仍是原生「标准模式」，不会多出条目。
 
 - **桌面端**：桌面应用的 profile 是 `desktop`，CLI 对它有额外限制（要先完全退出应用再执行）。
   桌面端直接用**插件**页添加最省事。
@@ -47,15 +52,16 @@ dsh plugin --profile web update @alm-allen/dsh-yayan-preset
 ## 装过更早的版本的话
 
 更早的版本靠一键安装脚本装本预设，它和本包**不要同时用**：那套装法会在 profile 的**用户层**留下
-同 id（`preset-yayan`）的声明，再装本插件包就会出现两条同名声明。迁到本包之前，先用那套脚本
-自带的回滚方式把它卸干净。
+同 id（`preset-yayan`）的声明。本包自「覆盖原生 standard」这版起不再声明 `preset-yayan`，所以
+两者并存不会撞行 id，但那条旧声明会继续往预设列表里塞一个独立的「雅言模式」条目——要的就是
+单一入口的话，先用那套脚本自带的回滚方式把它卸干净。
 
 ## 包结构
 
 ```
 dsh-yayan-preset/
 ├── package.json                插件清单：name、exports、dsh.bundle.patch
-├── cordis.patch.yml            本包贡献的组合层：insert 一条 preset-yayan 声明
+├── cordis.patch.yml            本包贡献的组合层：覆盖原生 preset-standard 声明
 └── plugins/
     ├── yayan-zh.mjs            汉化层插件本体（零外部 import），同时也是包的入口
     ├── self-test.mjs           离线自测：翻译覆盖率、纪律注入、缓存契约
@@ -69,15 +75,18 @@ dsh-yayan-preset/
 1. dsh 把包装到 `<profile>/node_modules/`，并把包名写进 `dsh.profile.bundles`——这一步由
    `@deepseek-ai/dsh-plugin-manager` 完成，`dsh plugin` 与插件页是同一条路径；
 2. 启动组合时，本包的 `cordis.patch.yml` 作为一层，在 profile 自有 `cordis.patch.yml`
-   **之前**应用，于是 `preset-yayan` 进入组合（顺序见 `@deepseek-ai/dsh-app-boot` 的
-   profile 装载：各 bundle 的 patch → profile 自己的 patch → launcher 的 `--patch`）；
+   **之前**应用（顺序见 `@deepseek-ai/dsh-app-boot` 的 profile 装载：各 bundle 的 patch →
+   profile 自己的 patch → launcher 的 `--patch`）。本包排在 `@deepseek-ai/dsh-web-app`
+   **之后**，所以能覆盖后者 `insert` 出来的 `preset-standard`；dsh 的组合结果里会标注
+   `# == @deepseek-ai/dsh-web-app, patched by @alm-allen/dsh-yayan-preset`；
 3. 预设内部那一行按**包名**解析到包入口 `plugins/yayan-zh.mjs`：它挂在
    `system-prompt/assemble` 瀑布（提示词与工具 schema）与 `agent/pre-step`（技能目录等注入块）
    上，只做文本替换；
 4. 预设是 **agent 平面**的组合：它在 roster 的 standing scope 下挂载一次，选择本预设的会话按
    scope 父子关系加入；各注册表、沙箱与审批栈、持久化、模型路由仍留在宿主组合里，不受影响。
 
-装本包**不会**改你的默认预设：要自己在 **设置 → 通用 → Agent 预设** 里选一次，或把它设为默认。
+装本包不动你的默认预设**设置**，但它改的是默认预设的**内容**：只要默认（或当前会话所选）的是
+「标准模式」，装完重启就是中文的，不需要额外操作。要回退就在插件页停用/卸载本包。
 
 ## 自测
 
@@ -125,6 +134,14 @@ section 数量不变、无未注册变量、翻译幂等，以及**换一个工�
 - 翻译表按 **0.2.1-alpha.2** 的提示词逐条核对并适配，**只保证 0.2.1-alpha.1 及以后**；
   更旧的 dsh 版本会有较多段落翻译不上（旧版键已按需求删除）。上游再次改写提示词时，
   未知文本原样保留为英文，用上面的自测与审计自查。
+- **一份 `cordis.patch.yml` 同时服务两个 dsh 版本**（0.2.0-rc.2 与 0.2.1-alpha.2）：它以 rc.2
+  的 shipped `standard` 为基准逐行重述，并只收录**两版都存在对应插件包**的行。`tool-schedule`
+  故意不收——rc.2 的包里没有 `@deepseek-ai/dsh-tool-schedule`，而一行引用不到的包会让整个预设
+  激活失败、组不成会话；代价是 Desktop 上少一个 schedule 工具行（属可选能力）。`time-context`
+  两版都有包故收录。两版 shipped 的逐行差异见 [CHANGELOG.md](./CHANGELOG.md)。
+- **升级 dsh 后要回头核对**：override 冻结整份 `config`，shipped 文件若新增或改动了插件行，
+  本包不会自动跟随。升级后把 `cordis.patch.yml` 与 `dsh-web-app/presets/standard.patch.yml`
+  对一遍（桌面端该文件在 `app.asar` 内，shell 打不开，但 dsh 自己的 read 工具能读）。
 - 本包不声明任何 `@deepseek-ai/dsh*` 的 peer，因此不会被 dsh 的插件兼容性预检拦下；
   它也不注册服务、不碰沙箱与审批栈、不写任何全局配置。
 
