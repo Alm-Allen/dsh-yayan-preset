@@ -9,8 +9,9 @@
 （多一个中文化层 `yayan-zh`）。停用或卸载本包即恢复原版。
 
 和仓颉模式（[dsh-cangjie-preset](https://github.com/Alm-Allen/dsh-cangjie-preset)）是同一套汉化机制、同一张翻译表。
-差别在挂载方式：仓颉目前仍是**新增**一个 `ptc` 的中文化预设（`preset-cangjie`），雅言已经改成
-**覆盖**原生 `standard`。
+差别只在**挂载对象**：雅言覆盖原生 `standard`（标准模式），仓颉覆盖原生 `ptc`（PTC 模式）。
+前者按 `mode: native` 把每个工具的 schema 直接发布给模型；后者按 `mode: ptc` 把工具包成
+TypeScript SDK，模型写一段程序来调用它们。
 
 本仓库是一个 **dsh 插件（bundle）**，不是安装脚本：`package.json` 里的 `dsh.bundle.patch`
 指向包内的 `cordis.patch.yml`，后者覆盖 `preset-standard` 那一行。安装、更新、卸载都交给
