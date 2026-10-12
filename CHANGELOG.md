@@ -67,3 +67,6 @@ Release 就退回 GitHub 自动生成的提交清单。
   不会使现有 KV Cache 条目失效」，且其文本不经过翻译层。另外把 persona 置空顺带修掉了
   shipped 本身的缓存漏洞——原生 standard 的 persona suffix 含 `{{cwd}}`，会让系统提示词
   随工作目录变化。
+- 补回 `tool-ralph` 的 `disabled: true`：shipped 的 `standard` 里这一行是禁用的（rc.2 与
+  alpha.2 都是），此前逐行重述时漏写，等于给标准模式多开了一个 ralph 工具面。按「纯中文化、
+  不改功能面」的口径收回，与 shipped 逐行对齐。
