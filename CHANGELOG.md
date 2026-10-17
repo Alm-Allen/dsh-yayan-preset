@@ -7,6 +7,23 @@ Release 就退回 GitHub 自动生成的提交清单。
 
 版本号用日期式（`2026.10.12`），与 `package.json` 的 `version`、tag 名同号。
 
+## [2026.10.17] - 2026-10-17
+
+### 适配 dsh 0.2.1-rc.1
+
+- 基准版本收敛为 **0.2.1-rc.1**（Web 的全局 npm 包与 Desktop 内置运行时都是它）。shipped
+  `standard` 逐行重述时补上 `tool-schedule` 与 `tool-plugin-market`，删除 rc.2 遗留的
+  `tool-subagent-codex` / `tool-subagent-claude-code` / `tool-ralph` 三行，按 rc.1 的 shipped
+  去掉 subagent 的 `backgroundMode`；plan-mode 首句按 rc.1 措辞重译。
+- 补译 rc.1 新增的提示词：`plugin_manager` / `plugin_market` 的整条工具描述与参数、
+  `workflow` 的顶层与嵌套参数（`meta.phases`）、`bash` 的 guidance 与描述，以及 office
+  技能拆成 7 个入口后的全部新描述。
+- `translateTool` 改为递归翻译整棵参数表（原来只翻顶层，`workflow.meta.*` 这类嵌套描述会漏）。
+- `audit-coverage.mjs` 修掉误指向 `cangjie-zh.mjs` 的路径，并对工具文本同时测 schema 路径
+  与 JSDoc 路径，减少假缺口。
+- `self-test.mjs` 内置样本加入 `plugin_manager`、`workflow`（含嵌套参数）与 office 新描述，
+  覆盖率保持 100%。
+
 ## [2026.10.12] - 2026-10-12
 
 ### 以 dsh 插件包发布

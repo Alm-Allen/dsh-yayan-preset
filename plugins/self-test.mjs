@@ -41,7 +41,50 @@ const IDENTITY_EN = 'You are an AI agent powered by DeepSeek Harness.'
 const CJK = /[\u4e00-\u9fff]/
 
 const tools = listFile === undefined
-	? [{ name: 'read', description: 'Read a UTF-8 text file and return line-numbered content.', parameters: { type: 'object', properties: { file_path: { type: 'string', description: 'Path to read, resolved by the filesystem backend.' } } } }]
+	? [
+		{ name: 'read', description: 'Read a UTF-8 text file and return line-numbered content.', parameters: { type: 'object', properties: { file_path: { type: 'string', description: 'Path to read, resolved by the filesystem backend.' } } } },
+		// 0.2.1-rc.1 才补进表的两类文本：创造模式启用的 plugin_manager，以及 workflow 的
+		// 参数（含嵌套的 meta.phases）。放在内置样本里，防止以后改表时又把它们丢掉。
+		{
+			name: 'plugin_manager',
+			description: 'List plugins or bundles in the current profile, enable or disable them, install a bundle, or remove an installed bundle. Every action requires danger-full-access permission or approval for this call. Approval does not change the session permission mode. Changes affect every session in this profile. List first to obtain exact identifiers. Package installation can execute allowed build scripts. Live profiles apply changes immediately, including upgrades of installed packages; a change result that is not applied carries nextStep, which says what to do or tell the user. Unmet DSH version requirements (engines.dsh, else DSH peer dependencies) block installation and activation. Version exemptions risk crashes and data loss: warn the user and obtain explicit permission for the exact plugin and runtime versions before granting one.',
+			parameters: {
+				type: 'object',
+				properties: {
+					action: { type: 'string', description: 'Management operation.' },
+					target: { type: 'string', description: 'Plugin entry id, bundle package name, or installation spec, according to action. For an Official catalog entry, pass list_bundles installTarget.spec to install_bundle.' },
+					limit: { type: 'number', description: 'List page size, from 1 to 100; defaults to 25.' },
+				},
+			},
+		},
+		{
+			name: 'workflow',
+			description: `Run a JavaScript workflow script that orchestrates subagents at scale. Use this for work that fans out across many independent pieces — an audit over many files, a migration, multi-angle research, adversarial verification of findings — where you write the orchestration as a script instead of delegating turn by turn.
+
+Script-body hooks:
+- \`agent(prompt, opts?): Promise<any>\` — run one subagent to completion. Without \`opts.schema\` it resolves to the child's final text; with \`opts.schema\` (an object-rooted JSON Schema using ONLY type/properties/required/additionalProperties/items/enum/const/oneOf) it resolves to the validated object. Resolves \`null\` when the child fails (filter with \`.filter(Boolean)\`). Other opts: \`label\` (display), \`phase\` (progress group), and independent \`provider\`/\`model\` LLM target overrides.
+- \`pipeline(items, ...stages): Promise<any[]>\` — run each item through the stages independently with NO barrier between stages (prefer this for multi-stage work). Each stage receives \`(prev, item, index)\`. A stage throw drops that ITEM to \`null\` and skips its remaining stages.
+- \`parallel(thunks): Promise<any[]>\` — run zero-argument functions concurrently and await ALL of them (a barrier; use only when a stage genuinely needs every prior result together). A throwing thunk resolves to \`null\`.
+- \`phase(title)\` — start a progress phase; \`log(message)\` — narrate progress; \`args\` — the tool call's \`args\` input, verbatim.
+
+Misused hooks (bad arguments, unknown options, unsupported schemas, tripped caps) end the whole script instead of producing \`null\`. The script has no filesystem, network, timer, or Node.js APIs; the agents do the work.`,
+			parameters: {
+				type: 'object',
+				properties: {
+					script: { type: 'string', description: 'The plain JavaScript body, not TypeScript and without an `export const meta` statement; top-level await is allowed. End with `return <value>`; the JSON-serializable value is this tool\'s result.' },
+					meta: {
+						type: 'object',
+						description: 'The workflow identity as plain JSON, not code.',
+						properties: {
+							name: { type: 'string', description: 'Short kebab-case workflow name.' },
+							description: { type: 'string', description: 'One-line description of what the workflow does.' },
+						},
+					},
+					args: { type: 'object', description: 'Optional JSON input exposed to the script as the `args` global (wrap a bare list as a field, e.g. {"files": [...]}).' },
+				},
+			},
+		},
+	]
 	: (() => {
 		const raw = JSON.parse(fs.readFileSync(listFile, 'utf8'))
 		const list = Array.isArray(raw) ? raw : (raw?.data?.tools ?? raw?.tools ?? [])
@@ -128,14 +171,22 @@ const tableText = fs.readFileSync(new URL('./yayan-zh.mjs', import.meta.url), 'u
 
 /** 收集工具 schema 里所有待翻译文本：原文 -> 标签（同名文本只保留首次出现的标签）。 */
 const originals = new Map()
+const add = (text, label) => { if (typeof text === 'string' && text.length > 0 && !originals.has(text)) originals.set(text, label) }
+/** 递归收集：`translateTool` 翻的是整棵参数表，嵌套的 `properties` / `items` 同样要检查。 */
+const collect = (schema, label) => {
+	if (schema === null || typeof schema !== 'object') return
+	add(schema.description, label)
+	const properties = schema.properties
+	if (properties !== null && typeof properties === 'object') {
+		for (const [name, property] of Object.entries(properties)) collect(property, label + '.' + name)
+	}
+	const items = schema.items
+	if (items !== null && typeof items === 'object') collect(items, label + '[]')
+}
 for (const tool of tools) {
 	if (tool === null || typeof tool !== 'object' || typeof tool.name !== 'string') continue
-	const add = (text, label) => { if (typeof text === 'string' && text.length > 0 && !originals.has(text)) originals.set(text, label) }
 	add(tool.description, tool.name)
-	const properties = tool.parameters?.properties
-	if (properties !== null && typeof properties === 'object') {
-		for (const [name, property] of Object.entries(properties)) add(property?.description, tool.name + '.' + name)
-	}
+	collect(tool.parameters, tool.name)
 }
 
 /**
@@ -173,7 +224,9 @@ if (stepHandler !== undefined) {
 		'A skill is a reusable set of task-specific instructions. The following skills are available in this session:',
 		'',
 		'<available_skills>',
-		'- `office-docx`: Create, read, edit, and check Word documents (.docx), including reports, letters, and formatted tables. Use when a DOCX file is an input or requested deliverable.',
+		'- `office`: Create, edit, inspect, or convert Office documents, spreadsheets, presentations, and PDFs. Load to choose the relevant workflow.',
+		'- `office-docx`: Create, read, edit, and validate Word documents (.docx).',
+		'- `office-xlsx`: Read, create, edit, and validate Excel workbooks, data, and formulas (.xlsx).',
 		'</available_skills>',
 		'',
 		'</system-reminder>',

@@ -13,9 +13,9 @@
 # 三条必须守住的规则（见 @deepseek-ai/dsh-agent-preset 的 cordis-composition-reference skill）：
 #
 #   1. **`config` 是整体替换，绝不深合并**——upstream 那份 `plugins` 列表必须在这里完整重述，
-#      漏一行就等于那个插件消失。本文件的基准是 **0.2.0-rc.2** 的
-#      `dsh-web-app/presets/standard.patch.yml`：逐行完整重述它，另加 `yayan-zh`（汉化层）、
-#      显式的 `tool-presentation`（默认即 native）与 `time-context`，并把 persona 置空；
+#      漏一行就等于那个插件消失。本文件的基准是 **0.2.1-rc.1** 的
+#      `dsh-web-app/presets/standard.patch.yml`：逐行完整重述它，另加 `yayan-zh`（汉化层），
+#      并把 persona 置空；
 #   2. `name` 为真值时只是**断言**既有插件名，不是重命名——所以这里保持
 #      `@deepseek-ai/dsh-agent-preset`，而 `config.id` 必须写成 `standard`：会话保存的是它；
 #   3. 目标行没匹配上时 Loader 只警告并跳过，不会弄坏 profile——所以本包单独装、或 shipped
@@ -27,23 +27,11 @@
 # ⚠️ 代价：override 冻结整份 `config`。dsh 升级后 shipped 文件若新增或改动插件行，本文件不会
 # 自动跟随，需要对照 `dsh-web-app/presets/standard.patch.yml` 手工核对一次。
 #
-# ⚠️ 两个 dsh 版本的 shipped `standard` 并不一样（已逐行核对）。本文件按「两版都能加载」取
-# 基准：只收录两版都存在对应插件包的行。
-#
-#   · 0.2.0-rc.2（旧 RC，Web profile 用的那个）——本文件的基准。它的 shipped 里有
-#     `tool-subagent-codex` / `tool-subagent-claude-code` / `tool-ralph`（三行本来就
-#     `disabled: true`，保留无害），没有 `time-context` / `tool-schedule`；
-#   · 0.2.1-alpha.2（最新 alpha，Desktop 用的那个）——shipped 里没有上面那三行，改挂
-#     `time-context` 与 `tool-schedule`，并给两个 subagent 行加了
-#     `toolFilter.deny: [schedule_*]`。
-#
-# `tool-schedule` **故意不收录**：rc.2 的包里没有 `@deepseek-ai/dsh-tool-schedule`
-# （只有 `@deepseek-ai/dsh-schedule`），而一行引用不到的包会让整个预设激活失败、组不成会话。
-# 代价是 Desktop 上少一个 schedule 工具行——属可选能力，且 shipped 本身也对 subagent
-# `deny` 了它。`time-context` 两版都有包，所以收录，Desktop 因此不会比原生标准模式少这项。
-#
-# alpha.2 的 `toolFilter` 也没有跟随：它在 rc.2 的 schema 里未必被接受（未验证），而不 deny 的
-# 唯一后果是 subagent 可能多看到几个 schedule 工具——本文件根本没挂那几行。
+# ⚠️ 基准版本：**0.2.1-rc.1**。Web 的全局 npm 包与 Desktop 内置运行时现在都是它，提示词也与
+# 源码 HEAD 一致（rc.1 之后只多 UI 提交）。上一版维护的「0.2.0-rc.2 + 0.2.1-alpha.2 双版兼容」
+# 已收敛为单一基准：`tool-subagent-codex` / `tool-subagent-claude-code` / `tool-ralph` 三行是
+# rc.2 的遗留（shipped 已删除），本文件不再保留；`tool-schedule` 与 `tool-plugin-market`
+# 在 rc.1 的包里都存在，按 shipped 收录。
 - id: preset-standard
   name: "@deepseek-ai/dsh-agent-preset"
   config:
@@ -55,13 +43,12 @@
       # 组成与仓颉模式（`cangjie`）逐行一致，差别只在**呈现方式**——仓颉挂在 `ptc`
       # 上，雅言挂在 `standard` 上，于是：
       #
-      #   1. `tool-presentation` 用 `mode: native`（每个工具的 schema 直接发布给模型），
-      #      而不是仓颉的 `mode: ptc`；
+      #   1. 本预设没有 `run_code` 这层中介：每个工具的 `description` 与参数描述直接作为
+      #      独立 schema 发布给模型（`tool-presentation` 不写这一行，默认即 `native`）；
       #
-      #   1. persona 与 plan-mode 段落在本文件内直接写成中文；
-      #   2. `yayan-zh.mjs` 在 `system-prompt/assemble` 瀑布上把其余英文提示词
-      #      （各工具的 guidance 段、`tools:ptc-only`、`tools:sdk` 的说明与生成的
-      #      TypeScript 声明注释、`run_code` 自身的描述与参数描述）替换为中文。
+      #   2. persona 与 plan-mode 段落在本文件内直接写成中文；
+      #   3. `yayan-zh.mjs` 在 `system-prompt/assemble` 瀑布上把其余英文提示词
+      #      （各工具的 guidance 段与 schema 文本）替换为中文。
       #
       # 翻译是「精确匹配 + 正则兜底」的定向替换：只替换已知的英文原文，未知文本原样
       # 保留，因此升级后新增的工具或段落会以英文出现，而不是被破坏。工具名、参数名、
@@ -161,6 +148,11 @@
       - id: tool-jobs
         name: "@deepseek-ai/dsh-tool-jobs"
 
+      # 定时任务（schedule_*）的注册表在宿主平面，这里只挂面向模型的控制工具。
+      # 0.2.1-rc.1 的 shipped `standard` 收了这一行，包里也有对应实现，按 shipped 对齐。
+      - id: tool-schedule
+        name: "@deepseek-ai/dsh-tool-schedule"
+
       # ── skills ──────────────────────────────────────────────────────────────────
 
       # 技能注册表在宿主组合里，按 scope 分层：这些行注册进本预设的那一层，因此不需要
@@ -195,7 +187,7 @@
             name: "@deepseek-ai/dsh-plan-mode"
             config:
               section: |
-                你处于计划模式。在 exit_plan_mode 成功或用户切换会话模式之前，一直保持在计划模式。用祈使句要求实施改动，意味着规划该实施，而不是执行它。用户的对话式同意——包括回答你提出的某个问题——不构成批准，也不结束计划模式；把已确认的决定并入计划，并通过 exit_plan_mode 提交。
+                你处于计划模式。在用户通过 exit_plan_mode 批准你的计划或切换会话模式之前，一直保持在计划模式。用祈使句要求实施改动，意味着规划该实施，而不是执行它。用户的对话式同意——包括回答你提出的某个问题——不构成批准，也不结束计划模式；把已确认的决定并入计划，并通过 exit_plan_mode 提交。
 
                 先探索。用只读的读取、搜索、静态分析和检查，把计划建立在真实的代码库之上。不要编辑或写入文件、不要改配置、不要运行会重写受跟踪文件的格式化或代码生成、不要提交，也不要其他方式执行计划。优先复用既有函数和模式，而不是新建机制。
 
@@ -262,37 +254,14 @@
               provider: spawn
               toolName: subagent
               modelSelectionSettings: true
-              backgroundMode: continuable
 
           # fork 省略模型选择，使 provider/model 与父级相同，继承的历史保持可用于 KV Cache
-          # 复用。本预设让 fork 保持 continuable；父子继承同一个消息工具，而父级 id 与
-          # 返回引导跟随继承的历史。
+          # 复用。`backgroundMode` 在 rc.1 的 shipped 里已经不再写，这里同样不写。
           - id: tool-subagent-fork
             name: "@deepseek-ai/dsh-tool-subagent"
             config:
               provider: fork
               toolName: subagent_fork
-              backgroundMode: continuable
-
-          # 生产版 dsh 不安装这些可选 provider。在本 Profile 安装对应 Bundle 并重启 Host，
-          # 然后复制本预设并从匹配的工具行移除 `disabled`。仅宿主可用并不授予任何工具。
-          - id: tool-subagent-codex
-            name: "@deepseek-ai/dsh-tool-subagent"
-            disabled: true
-            config:
-              provider: codex
-              toolName: subagent_codex
-              backgroundMode: one-shot
-              maxDepth: provider-managed
-
-          - id: tool-subagent-claude-code
-            name: "@deepseek-ai/dsh-tool-subagent"
-            disabled: true
-            config:
-              provider: claude-code
-              toolName: subagent_claude_code
-              backgroundMode: one-shot
-              maxDepth: provider-managed
 
           - id: workflow-ptc
             name: "@deepseek-ai/dsh-workflow-ptc"
@@ -304,15 +273,6 @@
             # 与仓颉的差异：标准模式下每个工具都是独立 schema，`workflow` 与其它工具并列
             # 并不产生「第二个由模型编写的编排面」（那是 PTC 模式下与 run_code 重叠的问题）。
             # 所以这里保持启用，与随附的 `standard` 预设一致。
-
-          # shipped 的 `standard` 里这一行是禁用的（rc.2 与 alpha.2 都是 `disabled: true`）。
-          # 此前逐行重述时漏写，等于给标准模式多开了一个 ralph 工具面；这里补回，与 shipped 对齐。
-          - id: tool-ralph
-            name: "@deepseek-ai/dsh-tool-ralph"
-            disabled: true
-            config:
-              subagentProvider: spawn
-              maxRounds: 64
 
       # ── remaining model-facing rows ─────────────────────────────────────────────
 
@@ -333,14 +293,6 @@
 
       # ── presentation ────────────────────────────────────────────────────────────
 
-      # 只对本 agent 生效的呈现方式。这一行等待宿主的 `codeRuntime` 而不是假定它存在：
-      # 一个没有组合 TypeScript 运行时的部署会在挂载时失败并点名本 id，而不是在第一个
-      # 请求时才失败。shipped `standard` 不写这一行（默认即 native），这里显式写出来。
-      - id: tool-presentation
-        name: "@deepseek-ai/dsh-agent-tool-presentation"
-        config:
-          mode: native
-
       # ── deliverables ─────────────────────────────────────────────────────────────
 
       # `present` 把已完成的文件声明为交付物，Web 界面把它们渲染成收尾消息下方的交付
@@ -354,11 +306,16 @@
       - id: present
         name: "@deepseek-ai/dsh-tool-present"
 
-      # ── plugin manager ──────────────────────────────────────────────────────────
+      # ── plugin manager / plugin market ──────────────────────────────────────────
 
-      # shipped `standard` 也挂这一行（默认 disabled）。override 是整份替换，漏掉它就
-      # 等于把这一行从预设里删掉——补在这里，与 shipped 逐行对齐（此前作为独立预设时
-      # 这一行是缺失的）。
+      # shipped `standard` 也挂这两行（默认 disabled）。override 是整份替换，漏掉它们就
+      # 等于把这两行从预设里删掉——补在这里，与 shipped 逐行对齐。`tool-plugin-market`
+      # 是 0.2.1-rc.1 新增的读取型工具（浏览已配置的插件市场索引），两者都由 profile
+      # 层按需启用；普通标准模式保持 shipped 的禁用状态。
       - id: tool-plugin-manager
         name: "@deepseek-ai/dsh-plugin-manager/tools"
+        disabled: true
+
+      - id: tool-plugin-market
+        name: "@deepseek-ai/dsh-plugin-market/tools"
         disabled: true

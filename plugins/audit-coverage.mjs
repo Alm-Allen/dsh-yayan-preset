@@ -30,7 +30,7 @@ if (ROOT === undefined || ROOT.length === 0) {
 	console.error('用法：node audit-coverage.mjs <DSH 源码根目录>（或用环境变量 DSH_CHECKOUT）')
 	process.exit(2)
 }
-const PLUGIN = new URL('./cangjie-zh.mjs', import.meta.url)
+const PLUGIN = new URL('./yayan-zh.mjs', import.meta.url)
 
 const SKIP = /(\\|\/)(node_modules|dist|lib|build|\.git|\.probe|\.idea|\.npm-cache|coverage|snapshots|fixtures|\.agents)(\\|\/)/i
 const IS_TEST = /(\\|\/)tests?(\\|\/)|\.spec\.ts$|\.test\.ts$/i
@@ -149,6 +149,18 @@ const throughStep = async text => {
 	}))
 	return decision.messages[0].content[0].text
 }
+/**
+ * 以独立工具 schema 的形式跑一遍：这是标准模式（native）真正到达模型的路径。
+ *
+ * 工具描述在标准模式下走 `translateTool`，在 PTC 下才落进 `tools:sdk` 的 JSDoc；
+ * 只测 JSDoc 会把前者误报成缺口，所以两条路径都要试。
+ */
+const throughTool = async text => {
+	const tools = [{ name: 'probe', description: text, parameters: { type: 'object', properties: {} } }]
+	const sections = [{ name: 'harness:identity', text: 'You are an AI agent powered by DeepSeek Harness.' }]
+	const out = await assembleHandler(null, null, async () => ({ sections, contexts: [], tools, variables: { provider: 'p', model: 'm' } }))
+	return out.tools[0].description
+}
 
 const seen = new Set()
 const uncovered = []
@@ -156,8 +168,11 @@ for (const item of sourceItems) {
 	const key = item.text.slice(0, 90)
 	if (seen.has(key)) continue
 	seen.add(key)
-	const after = await throughAssemble(item.kind === 'section' ? item.text : `/** ${item.text} */`)
-	if (after.replace(/^\/\*\* | \*\/$/g, '') === item.text) uncovered.push(item)
+	const viaTool = item.kind === 'section' ? item.text : await throughTool(item.text)
+	const viaAssemble = await throughAssemble(item.kind === 'section' ? item.text : `/** ${item.text} */`)
+	const toolTranslated = viaTool !== item.text
+	const assembleTranslated = viaAssemble.replace(/^\/\*\* | \*\/$/g, '') !== item.text
+	if (!toolTranslated && !assembleTranslated) uncovered.push(item)
 }
 for (const item of skillItems) {
 	const key = item.text.slice(0, 90)
