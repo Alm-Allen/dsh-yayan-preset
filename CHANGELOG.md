@@ -34,6 +34,8 @@ Release 就退回 GitHub 自动生成的提交清单。
   `DOCS` 层。
 - 运行时上下文的三条动态条目（`Current working directory`、实现代码检出目录、Web GUI URL）
   补正则映射。
+- `run_code` 段说明：rc.1 把参数语序改成逗号式（`code`, … , and `description`），旧表只收
+  破折号式与前置式两代——补 rc.1 原文与 `repl` 变体。
 
 ## [2026.10.12] - 2026-10-12
 

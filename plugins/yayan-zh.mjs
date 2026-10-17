@@ -278,6 +278,12 @@ send_message 与 interrupt_agent 的目标用 spawn_teammate 或 list_agents 返
 	// ── 0.2.1-alpha.1 改写的原文（上面的旧键一律保留，旧版本仍能命中）──
 	['`run_code` takes two required arguments: `description`, a short summary of what the program does, and `code` — the body of an async TypeScript function (erasable syntax only — no `enum` or namespaces; type annotations are advisory, the code runs type-stripped). The declarations below are SDK bindings for this program. A declaration does not make its name a directly callable tool; only names supplied as separate tool schemas may be called directly.',
 		'`run_code` 接受两个必填参数：`description`，对程序功能的简短说明；以及 `code`——一个 async TypeScript 函数的函数体（只支持可擦除语法——不能有 `enum` 或命名空间；类型标注仅作提示，代码会被去掉类型后运行）。下面的声明是本程序可用的 SDK 绑定。某名字被声明并不意味着它可以直接调用；只有作为独立工具 schema 提供的名字才能直接调用。'],
+	// 0.2.1-rc.1 把这段说明改成逗号语序（`code`, … , and `description`），与上面两代破折号/前置
+	// 语序都不同；rc.1 之后 PTC 会话里唯一残留的英文散文就是这一句。
+	['`run_code` takes two required arguments: `code`, the body of an async TypeScript function (erasable syntax only — no `enum` or namespaces; type annotations are advisory, the code runs type-stripped), and `description`, a short summary of what the program does. The declarations below are SDK bindings for this program. A declaration does not make its name a directly callable tool; only names supplied as separate tool schemas may be called directly.',
+		'`run_code` 接受两个必填参数：`code`，一个 async TypeScript 函数的函数体（只支持可擦除语法——不能有 `enum` 或命名空间；类型标注仅作提示，代码会被去掉类型后运行），以及 `description`，对程序功能的简短说明。下面的声明是本程序可用的 SDK 绑定。某名字被声明并不意味着它可以直接调用；只有作为独立工具 schema 提供的名字才能直接调用。'],
+	['`run_code` takes two required arguments: `code`, the program to execute, and `description`, a short summary of what the program does. The declarations below are SDK bindings for this program. A declaration does not make its name a directly callable tool; only names supplied as separate tool schemas may be called directly.',
+		'`run_code` 接受两个必填参数：`code`，要执行的程序，以及 `description`，对程序功能的简短说明。下面的声明是本程序可用的 SDK 绑定。某名字被声明并不意味着它可以直接调用；只有作为独立工具 schema 提供的名字才能直接调用。'],
 
 	// ── 0.2.1-alpha.2 新增与改写的原文 ───────────────────────────────────────────
 	// 这一批来自机械核对：把 0.2.1-alpha.2 里会进入提示词的英文原文逐条抽出来，喂给本插件
