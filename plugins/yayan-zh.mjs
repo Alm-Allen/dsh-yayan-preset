@@ -400,6 +400,8 @@ send_message 与 interrupt_agent 的目标用 spawn_teammate 或 list_agents 返
 		'用 LibreOffice Kit 渲染所需的文档图片，或检查视觉布局。'],
 	['Read, create, edit, and validate Excel workbooks, data, and formulas (.xlsx).',
 		'读取、创建、编辑并校验 Excel 工作簿、数据与公式（.xlsx）。'],
+	['Add the official “powered by dsh” badge to documents, pull requests, merge requests, and other content produced with DeepSeek Harness. Use whenever creating a pull request or merge request. Also use when the user asks for a dsh badge, powered-by-dsh attribution, or a reusable dsh badge asset or snippet.',
+		'给用 DeepSeek Harness 产出的文档、pull request、merge request 及其他内容添加官方“powered by dsh”徽章。创建 pull request 或 merge request 时使用。当用户要求 dsh 徽章、powered-by-dsh 署名，或可复用的 dsh 徽章素材或代码片段时也使用。'],
 
 	// ── 0.2.1-rc.1：工具 schema 里仍是英文的几条 ──────────────────────────────
 	//   · `plugin_manager`：创造模式里由 profileContext 条件下的行启用，整条描述与 9 个
@@ -482,6 +484,29 @@ send_message 与 interrupt_agent 的目标用 spawn_teammate 或 list_agents 返
 		'这条命令的工作目录。默认为会话工作区；相对路径基于它解析。'],
 	['Run in the background and return a job id immediately (collect with job_output, stop with job_kill). No timeout applies.',
 		'在后台运行并立即返回 job id（用 job_output 收集，用 job_kill 停止）。不应用超时。'],
+
+// ── 0.2.1-rc.1：运行时上下文与 Web GUI 的两段说明（path-free 版本）─────────────
+// 0.2.1-rc.1 把「检出目录」与「Web GUI URL」从段落正文挪进了运行时上下文，段落本身改成
+// 不含路径的固定文本（`harness:source` / `app:web-surface` 两个 section，interpolate: false）。
+// 旧版带路径的形态仍在 PATTERNS 里兜底，两版都收，升级前后都能命中。
+	['The runtime context names the DeepSeek Harness implementation checkout. The checkout location and current working directory are separate values and may differ; never infer the working directory from the checkout path. Use pwd to determine the current working directory. Use this checkout only to inspect or extend DSH itself.',
+		'运行时上下文会给出 DeepSeek Harness 实现代码的检出目录。检出位置与当前工作目录是两个独立的值，可能不同；不要从检出路径推断工作目录。用 pwd 确定当前工作目录。这个检出只用于查看或扩展 DSH 本身。'],
+	['You are interacting with the user through the DeepSeek Harness Web GUI whose URL the runtime context names. When the user refers to "this page", "this GUI", or "this app" without naming another target, they mean this GUI. The browser provides no implicit DOM, route, or screenshot context. The client-plugin HMR receiver is active, but client-plugin changes reload without a refresh only while `pnpm run dev:web` is also running from this same checkout to rebuild their bundles; verify that watcher before promising automatic updates. Every other change — the apps/web shell and plain packages — requires rebuilding the affected Web artifacts and verifying this existing URL after a page refresh. Starting another server does not update this GUI. The apps/web Vite entry builds the shell but is not a standalone application because only dsh web injects window.__DSH_BOOT__. Do not start a replacement server unless the user asks; if one is needed, use a managed background job and verify its exact URL.',
+		'你正在通过运行时上下文给出 URL 的那个 DeepSeek Harness Web GUI 与用户交互。当用户提到"这个页面""这个 GUI"或"这个应用"而没有指明其他目标时，他们指的就是这个 GUI。浏览器不会提供任何隐式的 DOM、路由或截图上下文。client-plugin 的 HMR 接收器是激活的，但只有在同一个检出里同时跑着 `pnpm run dev:web` 重新构建它们时，client-plugin 的改动才会免刷新热载；作出自动更新的承诺之前先确认那个 watcher 在跑。其他一切改动——apps/web 外壳与普通包——都要重新构建受影响的 Web 产物，并在刷新后验证这个既有 URL。另起一个服务器不会更新这个 GUI。apps/web 的 Vite 入口只构建外壳，不是独立应用，因为只有 dsh web 会注入 window.__DSH_BOOT__。除非用户要求，不要启动替代服务器；若确实需要，用托管的后台任务，并验证它的确切 URL。'],
+
+// ── 0.2.1-rc.1：schedule 参数说明的改写与新增（工具行在 rc.1 才挂进预设）─────────
+	['Concise task name in the user\'s language, at most 120 characters. Name only the core action and subject; keep essential target identifiers such as PR numbers and branch names. Do not include execution frequency (e.g. daily, hourly), scheduled dates/times, time zones, task status, or configuration and execution details (e.g. read-only mode, profile-tag filters), even when embedded in the requested or existing title. Do not append parenthetical notes. Put scheduling information in the timing parameters and execution instructions in prompt.',
+		'用用户语言写的简洁任务名，最多 120 个字符。只写核心动作与对象；保留 PR 号、分支名这类必要的目标标识。不要包含执行频率（如 daily、hourly）、计划日期/时间、时区、任务状态或配置与执行细节（如只读模式、profile 标签过滤），即使它们已经出现在请求或现有标题里。不要附加括号注释。把调度信息放进 timing 参数，把执行说明放进 prompt。'],
+	['HH:mm:ss with optional 1-3 fractional digits, for example 23:00:00.',
+		'HH:mm:ss，可带 1-3 位小数，例如 23:00:00。'],
+	['HH:mm:ss with optional 1-3 fractional digits, for example 09:00:00.',
+		'HH:mm:ss，可带 1-3 位小数，例如 09:00:00。'],
+	['UTC or IANA Area/Location, for example Asia/Shanghai.',
+		'UTC 或 IANA Area/Location，例如 Asia/Shanghai。'],
+	['ISO weekdays, Monday 1 through Sunday 7, without repetitions.',
+		'ISO 星期序号，周一为 1、周日为 7，不得重复。'],
+	['New task name; follow the schedule_create title rules.',
+		'新任务名；遵循 schedule_create 的标题规则。'],
 ])
 
 /** 只在标准模式注入的「批量化调用」小节的首尾标记——PTC 模式下整段剥掉。 */
@@ -557,6 +582,11 @@ const PATTERNS = [
 		/^You are interacting with the user through the DeepSeek Harness Web GUI at \S+\. When the user refers to "this page", "this GUI", or "this app" without naming another target, they mean this GUI\.[\s\S]*$/,
 		(_m) => `你正在通过本机 DeepSeek Harness Web GUI 与用户交互。当用户提到"这个页面""这个 GUI"或"这个应用"而没有指明其他目标时，他们指的就是这个 GUI。浏览器不会提供任何隐式的 DOM、路由或截图上下文。`,
 	],
+	// 0.2.1-rc.1：运行时上下文里的动态条目（路径与 URL 由 harness 注入到 contexts）。
+	// 只翻渲染侧，落地快照就是同一份渲染结果，因此不破坏「渲染侧 vs 落地侧」的逐字比较。
+	[/^Current working directory: "(.+?)"\.$/, (_m, dir) => `当前工作目录：${dir}。`],
+	[/^Current DeepSeek Harness implementation checkout: "(.+?)"\.$/, (_m, root) => `当前 DeepSeek Harness 实现代码检出目录：${root}。`],
+	[/^Current DeepSeek Harness Web GUI URL: "(.+?)"\.$/, (_m, url) => `当前 DeepSeek Harness Web GUI URL：${url}。`],
 	[
 		/^Maximum number of lines to return\. Defaults to (\d+)\.$/,
 		(_m, n) => `最多返回的行数。默认为 ${n}。`,
@@ -2169,6 +2199,10 @@ const DOCS = new Map([
 		'文件系统执行世界中的规范绝对路径。'],
 	['Current absolute working directory.',
 		'当前的绝对工作目录。'],
+	// 这条的键与译文都含 JSDoc 闭合符，只能走 DOCS 层（`unescapeDoc` / `escapeDoc` 负责还原与转义）；
+	// 放进 PROSE 的子串替换会因为提示词里的 `*\/` 转义而永远匹配不上。
+	['minute hour day-of-month month day-of-week, for example "*/15 9-17 * * 1-5". When both day fields are restricted, a date matches if either one matches.',
+		'分钟 小时 日 月 星期，例如 "*/15 9-17 * * 1-5"。当两个日期字段都有限制时，只要其中一个匹配，该日期就匹配。'],
 
 ])
 

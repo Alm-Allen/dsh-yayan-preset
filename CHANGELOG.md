@@ -24,6 +24,17 @@ Release 就退回 GitHub 自动生成的提交清单。
 - `self-test.mjs` 内置样本加入 `plugin_manager`、`workflow`（含嵌套参数）与 office 新描述，
   覆盖率保持 100%。
 
+### 补遗：装上之后仍有英文的三处缺口
+
+- `harness:source` 与 `app:web-surface` 两段说明：rc.1 把「实现代码检出目录」与「Web GUI URL」
+  挪进运行时上下文，段落本体改成 path-free 的固定文案，旧表只认带路径的版本——补上两段新原文。
+- `schedule` 参数说明：rc.1 改写了 task title 的措辞（`Concise task name in the user's language…`、
+  `New task name; follow the schedule_create title rules.`），并新增两条 `HH:mm:ss`、
+  `UTC or IANA Area/Location`、`ISO weekdays` 四条参数说明；含 JSDoc 闭合符的 `cron` 那条走
+  `DOCS` 层。
+- 运行时上下文的三条动态条目（`Current working directory`、实现代码检出目录、Web GUI URL）
+  补正则映射。
+
 ## [2026.10.12] - 2026-10-12
 
 ### 以 dsh 插件包发布
