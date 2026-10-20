@@ -7,6 +7,28 @@ Release 就退回 GitHub 自动生成的提交清单。
 
 版本号用日期式（`2026.10.12`），与 `package.json` 的 `version`、tag 名同号。
 
+## [2026.10.20] - 2026-10-20
+
+### 合并 DOCS 表：把漏译补进 PROSE，删掉不可达的整层
+
+原来这套汉化有两张表：`PROSE`（所有提示词文本）与 `DOCS`（只服务 PTC 的 `tools:sdk`
+JSDoc）。雅言覆盖的是 `standard`，工具说明直接作为独立 schema 的 `description` 发布，
+**永远不会以 `/** ... *\/` 的形态出现**，所以 `DOCS` 这一层一次都命中不了。代价不是浪费
+代码，而是**漏译**：有 101 条工具描述只写在 `DOCS` 里，标准模式下只能露出英文。
+
+- `DOCS` 里标准模式**会到达**的条目（`ask_user_question` 的 7 个参数、`edit`/`write`
+  的路径、`grep`、`job_kill`、`read_image`、`web_search`、`todo`、plan-mode、
+  schedule 的 cron 参数等）已并入 `PROSE`，改走 `translateTool` 这条主路径。
+- 属于本预设**挂不到**的包（Agent Teams、terminal、session-query、worktree、ralph）的
+  78 条直接删除——按 `packages/bundle/*/cordis.patch.yml` 核对过，这些工具行不在
+  `standard` 预设里，宿主层也没有挂载。
+- 随之删除 `DOC_RE`、`unescapeDoc()`、`escapeDoc()`，以及 `translateText` 里的
+  JSDoc 分支：替换规则从「四层」收敛为「三层」（精确段落 → 正则 → 子串）。
+
+实测：`PROSE` 从 154 条增至 409 条，409 条逐条喂进真实的 `translateTool` 路径全部能翻出；
+`self-test` 全绿，覆盖率仍是 100%。
+
+
 ## [2026.10.17] - 2026-10-17
 
 ### 适配 dsh 0.2.1-rc.1
