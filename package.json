@@ -1,6 +1,6 @@
 {
   "name": "@alm-allen/dsh-yayan-preset",
-  "version": "2026.10.20",
+  "version": "2026.10.21",
   "description": "雅言模式（yayan）：把 DeepSeek Harness 的原生 standard 预设汉化——按 Loader 行 id 覆盖它的插件列表以加入中文化层，不新增预设条目。",
   "type": "module",
   "license": "MIT",
