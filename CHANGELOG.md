@@ -7,6 +7,19 @@ Release 就退回 GitHub 自动生成的提交清单。
 
 版本号用日期式（`2026.10.12`），与 `package.json` 的 `version`、tag 名同号。
 
+## [2026.10.23] - 2026-10-23
+
+### 适配 0.2.1-rc.2 的 Agent Teams，恢复被删的工具描述
+
+- 与仓颉、马良同一张表：`team:policy` 换成 rc.2 的新措辞（含 `interrupt=true/false`
+  两版）、`send_message` 去掉 durable、`wait_agent` 的 mailbox 改为 message，并新增
+  `team:identity` 的 Lead 精确键与队友正则。
+- 10.20 按「本预设挂不到的包」删掉的条目里，有 6 个工具是**会到达** standard 会话的：
+  `agent-team-profile` 是 profile 层 bundle，装上之后工具注册在 agent 作用域，与预设无关。
+  `spawn_teammate`、`list_agents`、`team_task_create/list/get/update` 及全部参数描述
+  已补回 `PROSE`。
+- 回放 0.2.1-rc.2 原文：policy 19/19 句、35 条工具描述、两种身份段全部命中。
+
 ## [2026.10.21] - 2026-10-21
 
 ### 同步 `run_code` 的 0.2.1-rc.2 文案

@@ -256,20 +256,34 @@ const PROSE = new Map([
 	// 精确段落映射：这段文本由 `scoped.systemPrompt.section({ name: 'team:policy' })`
 	// 直接写入，只出现在未排除 Team 的预设里（本机 chat 已被 excludePresets 排除）。
 
-	[`Agent Teams is available in this session, but create teammates only when the user explicitly asks to use Agent Teams or teammates.
+	[`Agent Teams is available in this session
 
 The Team Lead and all teammates share the same working directory and filesystem. Edits are immediately visible to every member. Split write work into disjoint scopes, record expected write scopes on shared tasks, and use task dependencies when work must be ordered. Write-scope overlap is advisory, not a lock.
 
 Prefer read/edit/write for file changes. If a file operation returns FS_STALE_VERSION, read the current file, rebase your intended change onto the new content, and retry. Bash, formatters, code generators, and scripts are not fully protected by the filesystem version guard; coordinate them explicitly and have the Lead review the final diff and run tests.
 
-Use the target returned by spawn_teammate or list_agents for send_message and interrupt_agent, or as owner when assigning or filtering shared tasks. send_message steers a running target at its nearest step boundary and starts or resumes an inactive target. inactive means no turn is executing; it does not describe task completion, success, failure, or waiting for other agents. provisioning means member creation is in progress; failed means member creation failed. A delivered peer item starts with its stable message id and sender name. A successful send is already durable even when its result says queued; do not resend it. Shared-task workflow is list, get, claim with the current revision, perform the work, then complete. Task readiness never starts an owner. Before wait_agent, use list_agents and make sure another required member is running or provisioning; use send_message first when the required member is inactive. wait_agent observes only changes after that call starts, never wakes a member, and returns noProgress immediately when no other member can produce a change. Re-list after wakeup or timeout. The Lead must wait for required teammates before giving the final answer.`,
-		`本会话可以使用 Agent Teams（智能体团队），但只有用户明确要求使用 Agent Teams 或队友时才创建队友。
+Use the target returned by spawn_teammate or list_agents for send_message and interrupt_agent, or as owner when assigning or filtering shared tasks. send_message steers a running target at its nearest step boundary and starts or resumes an inactive target. inactive means no turn is executing; it does not describe task completion, success, failure, or waiting for other agents. provisioning means member creation is in progress; failed means member creation failed. A peer message starts with its sender name. A successful send does not mean the recipient has processed it. Shared-task workflow is list, get, claim with the current revision, perform the work, then complete. Task readiness never starts an owner. Before wait_agent, use list_agents and make sure another required member is running or provisioning; use send_message first when the required member is inactive. wait_agent observes only changes after that call starts, never wakes a member, and returns noProgress immediately when no other member can produce a change. Re-list after wakeup or timeout. The Lead must wait for required teammates before giving the final answer.`,
+		`本会话可以使用 Agent Teams（智能体团队）。
 
 Team Lead 与所有队友共享同一个工作目录与文件系统。任何成员的改动对其他成员立即可见。把写入工作切分成互不重叠的作用域，把预期的写作用域记在共享任务上，需要排序时用任务依赖。写作用域重叠只是提示，不是锁。
 
 文件改动优先用 read/edit/write。如果某个文件操作返回 FS_STALE_VERSION，先读当前文件，把你的改动重基到新内容上，再重试。bash、格式化器、代码生成器与脚本并不完全受文件系统版本护栏保护；要显式协调它们，并由 Lead 审阅最终 diff 并运行测试。
 
-send_message 与 interrupt_agent 的目标用 spawn_teammate 或 list_agents 返回的 target；分配或筛选共享任务时也一样用它作 owner。send_message 会把正在运行的目标转向它最近的步骤边界，对 inactive 的目标则开始或恢复一轮。inactive 表示当前没有轮次在执行；它不描述任务完成、成功、失败或正在等待其他 agent。provisioning 表示成员创建正在进行；failed 表示成员创建失败。已投递的同伴消息以它稳定的消息 id 与发送者名字开头。一次成功的发送即使结果显示 queued 也已经持久化，不要重发。共享任务的流程是 list、get、用当前修订号 claim、做事、然后 complete。任务就绪不会启动归属者。在 wait_agent 之前，先用 list_agents 确认确实还有一个必需的成员在 running 或 provisioning；如果那个必需成员是 inactive，先用 send_message 唤醒它。wait_agent 只观察该调用开始之后的变化，从不唤醒成员；当没有其他成员可能产生变化时，它会立刻返回 noProgress。醒来或超时之后重新 list。Lead 必须在给出最终答复之前等待必需的队友。`],
+send_message 与 interrupt_agent 的目标用 spawn_teammate 或 list_agents 返回的 target；分配或筛选共享任务时也一样用它作 owner。send_message 会把正在运行的目标转向它最近的步骤边界，对 inactive 的目标则开始或恢复一轮。inactive 表示当前没有轮次在执行；它不描述任务完成、成功、失败或正在等待其他 agent。provisioning 表示成员创建正在进行；failed 表示成员创建失败。同伴消息以发送者名字开头。发送成功并不意味着接收者已经处理了它。共享任务的流程是 list、get、用当前修订号 claim、做事、然后 complete。任务就绪不会启动归属者。在 wait_agent 之前，先用 list_agents 确认确实还有一个必需的成员在 running 或 provisioning；如果那个必需成员是 inactive，先用 send_message 唤醒它。wait_agent 只观察该调用开始之后的变化，从不唤醒成员；当没有其他成员可能产生变化时，它会立刻返回 noProgress。醒来或超时之后重新 list。Lead 必须在给出最终答复之前等待必需的队友。`],
+	[`Agent Teams is available in this session
+
+The Team Lead and all teammates share the same working directory and filesystem. Edits are immediately visible to every member. Split write work into disjoint scopes, record expected write scopes on shared tasks, and use task dependencies when work must be ordered. Write-scope overlap is advisory, not a lock.
+
+Prefer read/edit/write for file changes. If a file operation returns FS_STALE_VERSION, read the current file, rebase your intended change onto the new content, and retry. Bash, formatters, code generators, and scripts are not fully protected by the filesystem version guard; coordinate them explicitly and have the Lead review the final diff and run tests.
+
+Use the target returned by spawn_teammate or list_agents for send_message, or as owner when assigning or filtering shared tasks. send_message steers a running target at its nearest step boundary and starts or resumes an inactive target. inactive means no turn is executing; it does not describe task completion, success, failure, or waiting for other agents. provisioning means member creation is in progress; failed means member creation failed. A peer message starts with its sender name. A successful send does not mean the recipient has processed it. Shared-task workflow is list, get, claim with the current revision, perform the work, then complete. Task readiness never starts an owner. Before wait_agent, use list_agents and make sure another required member is running or provisioning; use send_message first when the required member is inactive. wait_agent observes only changes after that call starts, never wakes a member, and returns noProgress immediately when no other member can produce a change. Re-list after wakeup or timeout. The Lead must wait for required teammates before giving the final answer.`,
+		`本会话可以使用 Agent Teams（智能体团队）。
+
+Team Lead 与所有队友共享同一个工作目录与文件系统。任何成员的改动对其他成员立即可见。把写入工作切分成互不重叠的作用域，把预期的写作用域记在共享任务上，需要排序时用任务依赖。写作用域重叠只是提示，不是锁。
+
+文件改动优先用 read/edit/write。如果某个文件操作返回 FS_STALE_VERSION，先读当前文件，把你的改动重基到新内容上，再重试。bash、格式化器、代码生成器与脚本并不完全受文件系统版本护栏保护；要显式协调它们，并由 Lead 审阅最终 diff 并运行测试。
+
+send_message 的目标用 spawn_teammate 或 list_agents 返回的 target；分配或筛选共享任务时也一样用它作 owner。send_message 会把正在运行的目标转向它最近的步骤边界，对 inactive 的目标则开始或恢复一轮。inactive 表示当前没有轮次在执行；它不描述任务完成、成功、失败或正在等待其他 agent。provisioning 表示成员创建正在进行；failed 表示成员创建失败。同伴消息以发送者名字开头。发送成功并不意味着接收者已经处理了它。共享任务的流程是 list、get、用当前修订号 claim、做事、然后 complete。任务就绪不会启动归属者。在 wait_agent 之前，先用 list_agents 确认确实还有一个必需的成员在 running 或 provisioning；如果那个必需成员是 inactive，先用 send_message 唤醒它。wait_agent 只观察该调用开始之后的变化，从不唤醒成员；当没有其他成员可能产生变化时，它会立刻返回 noProgress。醒来或超时之后重新 list。Lead 必须在给出最终答复之前等待必需的队友。`],
 
 	// ── 0.2.1-alpha.1 改写的原文（上面的旧键一律保留，旧版本仍能命中）──
 	['`run_code` takes two required arguments: `description`, a short summary of what the program does, and `code` — the body of an async TypeScript function (erasable syntax only — no `enum` or namespaces; type annotations are advisory, the code runs type-stripped). The declarations below are SDK bindings for this program. A declaration does not make its name a directly callable tool; only names supplied as separate tool schemas may be called directly.',
@@ -1008,10 +1022,79 @@ send_message 与 interrupt_agent 的目标用 spawn_teammate 或 list_agents 返
 		'要替换的字面文本。'],
 	['Update the current goal.',
 		'更新当前目标。'],
-	['Send one durable message to another Team member. A running target receives it at the nearest step boundary; an inactive target starts or resumes a turn.',
-		'向另一位团队成员发送一条持久消息。正在运行的目标会在最近的步骤边界收到它；inactive 的目标会因此开始或恢复一轮。'],
-	['Wait for the next teammate status, mailbox, or shared-task change after this call starts. This never wakes inactive members and returns noProgress immediately when no other member is running or provisioning. Re-list after wakeup or timeout instead of polling.',
-		'等待本次调用开始之后的下一个队友状态、邮箱或共享任务变化。它永远不会唤醒 inactive 的成员；当没有其他成员在运行或正在创建时，会立刻返回 noProgress。醒来或超时之后重新 list，不要轮询。'],
+	['Send one message to another Team member. A running target receives it at the nearest step boundary; an inactive target starts or resumes a turn.',
+		'向另一位团队成员发送一条消息。正在运行的目标会在最近的步骤边界收到它；inactive 的目标会因此开始或恢复一轮。'],
+	// ── Agent Teams（tool-agent-team，9 个工具）────────────────────────────────
+	// 由 `dsh-experimental-agent-team-profile` 在 profile 层插入：装上它，standard
+	// 会话就会拿到这些工具，描述必须在这里补齐（send_message / wait_agent /
+	// interrupt_agent 三条在上方）。
+	['Create one named, durable teammate. Only the Team Lead may call this tool.',
+		'创建一个具名、持久的队友。只有 Team Lead 可以调用本工具。'],
+	['Unique lower-kebab-case teammate name.',
+		'唯一的小写 kebab-case 队友名。'],
+	['Short description of the delegated responsibility.',
+		'对该队友所承担职责的简短描述。'],
+	['Complete initial task for the teammate.',
+		'给该队友的完整初始任务。'],
+	['fresh starts without Lead history; fork inherits completed Lead turns. Defaults to fresh.',
+		'fresh 不携带 Lead 的历史启动；fork 继承 Lead 已完成的轮次。默认为 fresh。'],
+	['Member target returned by spawn_teammate or list_agents, including lead.',
+		'spawn_teammate 或 list_agents 返回的成员目标，包括 lead。'],
+	['Self-contained message for the target.',
+		'发给目标的自包含消息。'],
+	['List the Lead and every durable teammate with an addressable target and current availability. inactive means no turn is executing, not a task result. provisioning and failed describe member creation.',
+		'列出 Lead 与每个持久队友，含可寻址目标与当前可用性。inactive 表示当前没有轮次在执行，而不是任务结果。provisioning 与 failed 描述成员创建的进行状态。'],
+	['Wait duration in milliseconds, from 10000 through 3600000. Defaults to 30000.',
+		'等待时长（毫秒），从 10000 到 3600000。默认为 30000。'],
+	['Teammate target returned by spawn_teammate or list_agents.',
+		'spawn_teammate 或 list_agents 返回的队友目标。'],
+	['Create one unowned pending task on the shared Team task board.',
+		'在共享的团队任务板上创建一个无归属的待处理任务。'],
+	['Concise task title.',
+		'简明的任务标题。'],
+	['Complete task details and acceptance criteria.',
+		'完整的任务细节与验收标准。'],
+	['Task ids that must complete first.',
+		'必须先完成的任务 id。'],
+	['Advisory workspace-relative file or directory prefixes this task expects to modify.',
+		'本任务预期改动的、相对于工作区的文件或目录前缀（仅作提示，不是锁）。'],
+	['List shared tasks, including readiness, owner, revision, blockers, and write-scope warnings.',
+		'列出共享任务，包含就绪状态、归属者、修订号、阻塞项与写作用域警告。'],
+	['Optional exact status filter.',
+		'可选，按精确状态过滤。'],
+	['Optional member target from spawn_teammate or list_agents, matching ownerName; use unowned for tasks without an owner.',
+		'可选，spawn_teammate 或 list_agents 返回的成员目标，与 ownerName 匹配；对没有归属者的任务使用 unowned。'],
+	['Optional readiness filter.',
+		'可选，按就绪状态过滤。'],
+	['Zero-based result offset. Defaults to 0.',
+		'从 0 开始的结果偏移量。默认为 0。'],
+	['Number of rows, 1 through 100. Defaults to 50.',
+		'返回行数，从 1 到 100。默认为 50。'],
+	['Read the complete latest value of one shared task before changing or executing it.',
+		'在改动或执行某个共享任务之前，读取它完整的当前值。'],
+	['Shared task id.',
+		'共享任务 id。'],
+	['Compare-and-set a shared task action using the latest revision from team_task_get or team_task_list.',
+		'使用 team_task_get 或 team_task_list 得到的最新修订号，对共享任务做比较并设置（CAS）操作。'],
+	['Current task revision used as the CAS precondition.',
+		'作为 CAS 前置条件的当前任务修订号。'],
+	['Task transition to apply.',
+		'要执行的任务状态迁移。'],
+	['Replacement title for edit.',
+		'edit 时使用的新标题。'],
+	['Replacement details for edit.',
+		'edit 时使用的新细节。'],
+	['Complete blocker list for set_dependencies.',
+		'set_dependencies 时使用的完整阻塞列表。'],
+	['Replacement advisory write scopes for edit.',
+		'edit 时使用的新写作用域提示。'],
+	['Member target from spawn_teammate or list_agents for Lead-only reassign; omit to unassign.',
+		'spawn_teammate 或 list_agents 返回的成员目标，用于仅限 Lead 的 reassign；省略则取消归属。'],
+	// Agent Teams 的 team:identity 段（Lead 视角）：名字固定为 "lead"，可以精确匹配。
+	['You are the Team Lead named "lead".\nUse list_agents({}) to find your teammates and their names.\nTo message another teammate, use send_message({ target: "<teammate name>", message: "..." }).',
+		'你是名为 "lead" 的 Team Lead。\n用 list_agents({}) 找到你的队友及他们的名字。\n要给另一位队友发消息，用 send_message({ target: "<teammate name>", message: "..." })。'],
+	['Wait for the next teammate status, message, or shared-task change after this call starts. This never wakes inactive members and returns noProgress immediately when no other member is running or provisioning. Re-list after wakeup or timeout instead of polling.',
+		'等待本次调用开始之后的下一个队友状态、消息或共享任务变化。它永远不会唤醒 inactive 的成员；当没有其他成员在运行或正在创建时，会立刻返回 noProgress。醒来或超时之后重新 list，不要轮询。'],
 	['Interrupt one teammate\'s current turn while preserving its pending inbox. Team Lead only.',
 		'打断某个队友当前的轮次，同时保留它待处理的收件箱。仅限 Team Lead。'],
 	['Execute a PowerShell command (`pwsh -Command`) and return its stdout/stderr. Each call runs in a fresh pwsh process; pass `workdir` instead of using `cd`. Paths use native Windows form (`C:\\...`); read environment variables with `$env:NAME`. Managed `$env:DSH_*` variables expose current harness environment facts. Long output is truncated to its tail; the full output is saved to a file whose path is reported when available. On Windows a force-killed command settles as `[exit code: 1]` without a signal marker — treat it as an interruption, not a command failure. Provide `description` before `command` in the arguments. Before any delete or move, verify that the resolved absolute target path is the intended one; never run it against a computed path you have not checked. Do not assign to automatic variables such as `$HOME`; variable names are case-insensitive, so `$home` is the same read-only variable. Commands may run under a file sandbox; a blocked file operation is reported as `[sandbox: file access denied under <mode> mode]`, a policy denial: do not retry another way. Under the Windows sandbox, read-only pwsh runs in PowerShell ConstrainedLanguage mode, while workspace-write stays in FullLanguage unless host policy says otherwise. In read-only, prefer cmdlets and core types (`[string]`, `[datetime]`, `[regex]`, `[guid]`); .NET static calls (`[System.IO.*]::`, `[math]::`), `Add-Type`, COM objects, and reflection fail with "only core types" errors. `-f` formatting, property access, and core cmdlets work. In both confined modes, programs cannot open named pipes, so a command that captures another program\'s output through piped stdio (Node.js `child_process.spawn`/`exec` with the default `stdio: \'pipe\'`) fails with EPERM, while `stdio: \'inherit\'` and `stdio: \'ignore\'` spawns work and PowerShell\'s own pipelines are unaffected. That EPERM is the documented boundary: do not retry the command another way — escalate the exact command once or restructure it to avoid capturing output.',
@@ -1931,6 +2014,12 @@ const PATTERNS = [
 	[
 		/^Use the (\S+) tool ONLY when the user explicitly asks for a workflow or for large multi-agent orchestration: you write a JavaScript script \(the tool description documents the exact format\) that fans work out across many subagents with phases and structured results\. For one or two delegations, prefer plain subagent calls\.$/,
 		(_m, toolName) => `只有当用户明确要求 workflow 或大规模多 agent 编排时，才使用 ${toolName} 工具：你要写一段 JavaScript 脚本（工具描述里有确切的格式说明），把工作按阶段分发给许多 subagent 并汇总结构化结果。只有一两次委派时，优先用普通的 subagent 调用。`,
+	],
+	// Agent Teams 的 team:identity 段（队友视角）：队友名是动态的，只能走正则。
+	[
+		/^You are teammate "([^"]+)"\.\nYour Team Lead is named "lead"\.\nTo message your Team Lead, use send_message\(\{ target: "lead", message: "\.\.\." \}\)\.\nUse list_agents\(\{\}\) to find your teammates and their names\.\nTo message another teammate, use send_message\(\{ target: "<teammate name>", message: "\.\.\." \}\)\.$/,
+		(_m, name) =>
+			`你是队友 "${name}"。\n你的 Team Lead 名为 "lead"。\n要给 Team Lead 发消息，用 send_message({ target: "lead", message: "..." })。\n用 list_agents({}) 找到你的队友及他们的名字。\n要给另一位队友发消息，用 send_message({ target: "<teammate name>", message: "..." })。`,
 	],
 ]
 
